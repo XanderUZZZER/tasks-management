@@ -4,43 +4,52 @@ import { v4 as uuidv4 } from 'uuid';
 import { CreateTaskDto } from './dto/create-task.dto';
 import { GetTaskFilterDto } from './dto/get-task-filter.dto';
 
+import { InjectModel } from '@nestjs/mongoose';
+import { Model } from 'mongoose';
+
 @Injectable()
 export class TasksService {
-  private tasks: Task[] = [
-    {
-      id: uuidv4(),
-      title: 'title1',
-      description: 'description1',
-      status: TaskStatus.OPEN
-    },
-    {
-      id: uuidv4(),
-      title: 'title2',
-      description: 'description2',
-      status: TaskStatus.IN_PROGRESS
-    }
-  ];
+  private tasks: Task[] = [];
+  //   {
+  //     id: uuidv4(),
+  //     title: 'title1',
+  //     description: 'description1',
+  //     status: TaskStatus.OPEN
+  //   },
+  //   {
+  //     id: uuidv4(),
+  //     title: 'title2',
+  //     description: 'description2',
+  //     status: TaskStatus.IN_PROGRESS
+  //   }
+  // ];
 
-  getAllTasks(): Task[] {
-    return this.tasks;
+  constructor(@InjectModel('Task') private readonly taskModel: Model<Task>) { }
+
+  async getAllTasks(): Promise<Task[]> {
+    //return this.tasks;
+    const tasks = await this.taskModel.find().exec();
+    return tasks;
   }
 
   getTasksWithFilters(filterDto: GetTaskFilterDto): Task[] {
-    const { status, searchTerm } = filterDto;
-    let tasks = this.getAllTasks();
+    // const { status, searchTerm } = filterDto;
+    // let tasks = this.getAllTasks();
 
-    if (status) {
-      tasks = tasks.filter(task => task.status === status);
-    }
+    // if (status) {
+    //   tasks = tasks.filter(task => task.status === status);
+    // }
 
-    if (searchTerm) {
-      tasks = tasks.filter(task =>
-        task.title.includes(searchTerm) ||
-        task.description.includes(searchTerm)
-      );
-    }
+    // if (searchTerm) {
+    //   tasks = tasks.filter(task =>
+    //     task.title.includes(searchTerm) ||
+    //     task.description.includes(searchTerm)
+    //   );
+    // }
 
-    return tasks;
+    //return tasks;
+
+    return null;
   }
 
   getTaskById(id: string): Task {
@@ -53,17 +62,29 @@ export class TasksService {
     return found;
   }
 
-  createTask(createTaskDto: CreateTaskDto): Task {
+  async createTask(createTaskDto: CreateTaskDto): Promise<Task> {
+    // const { title, description } = createTaskDto;
+    // const task: Task = {
+    //   id: uuidv4(),
+    //   title,
+    //   description,
+    //   status: TaskStatus.OPEN
+    // }
+
+    // this.tasks.push(task);
+    // return task;
+
     const { title, description } = createTaskDto;
-    const task: Task = {
-      id: uuidv4(),
+
+    const task = new this.taskModel({
       title,
       description,
       status: TaskStatus.OPEN
-    }
+    });
 
-    this.tasks.push(task);
-    return task;
+    const result = await task.save();
+    console.log(result);
+    return result;
   }
 
   deleteTask(id: string): void {

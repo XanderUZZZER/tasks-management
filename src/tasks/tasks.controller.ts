@@ -10,10 +10,11 @@ export class TasksController {
   constructor(private tasksService: TasksService) { }
 
   @Get()
-  getTasks(@Query(ValidationPipe) filterDto: GetTaskFilterDto): Task[] {
+  getTasks(@Query(ValidationPipe) filterDto: GetTaskFilterDto): Promise<Task[]> | Task[] {
     if (Object.keys(filterDto).length) {
       return this.tasksService.getTasksWithFilters(filterDto);
     } else {
+      //return this.tasksService.getAllTasks();
       return this.tasksService.getAllTasks();
     }
   }
@@ -25,7 +26,7 @@ export class TasksController {
 
   @Post()
   @UsePipes(ValidationPipe)
-  createTask(@Body() createTaskDto: CreateTaskDto): Task {
+  createTask(@Body() createTaskDto: CreateTaskDto): Promise<Task> {
     return this.tasksService.createTask(createTaskDto);
   }
 
