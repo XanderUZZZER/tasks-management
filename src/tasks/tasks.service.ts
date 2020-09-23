@@ -10,19 +10,6 @@ import { Model } from 'mongoose';
 @Injectable()
 export class TasksService {
   private tasks: Task[] = [];
-  //   {
-  //     id: uuidv4(),
-  //     title: 'title1',
-  //     description: 'description1',
-  //     status: TaskStatus.OPEN
-  //   },
-  //   {
-  //     id: uuidv4(),
-  //     title: 'title2',
-  //     description: 'description2',
-  //     status: TaskStatus.IN_PROGRESS
-  //   }
-  // ];
 
   constructor(@InjectModel('Task') private readonly taskModel: Model<Task>) { }
 
