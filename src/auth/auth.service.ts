@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ConflictException, Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { SignUpTechDto } from './dto/signup-tech.dto';
@@ -17,20 +17,29 @@ export class AuthService {
       email,
       password
     } = singUpTechDto;
+    try {
+      const tech = new this.techModel({
+        firstName,
+        lastName,
+        email,
+        password
+      });
 
-    const tech = new this.techModel({
-      firstName,
-      lastName,
-      email,
-      password
-    });
+      const salt = await genSalt(10);
+      tech.password = await hash(password, salt);
 
-    const salt = await genSalt(10);
-    tech.password = await hash(password, salt);
-
-    const result = await tech.save();
-    console.log(result);
-    return result;
+      const result = await tech.save();
+      console.log(result);
+      return result;
+    }
+    catch (error) {
+      if (error.code === 11000) {// duplicate email error code
+        return new ConflictException('email already taken, provide another email')
+      } else {
+        console.log('err occured', error);
+        return new InternalServerErrorException(error);
+      }
+    }
   }
 
   async signIn(singInTechDto: SignInTechDto) {
