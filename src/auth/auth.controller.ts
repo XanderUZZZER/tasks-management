@@ -1,4 +1,4 @@
-import { Body, Controller, Post, ValidationPipe } from '@nestjs/common';
+import { Body, Controller, Get, Post, ValidationPipe } from '@nestjs/common';
 import { SignUpTechDto } from './dto/signup-tech.dto';
 import { AuthService } from './auth.service'
 import { SignInTechDto } from './dto/signin-tech.dto';
@@ -13,7 +13,12 @@ export class AuthController {
   }
 
   @Post('/signin')
-  signIn(@Body() signInTechDto: SignInTechDto) {
+  signIn(@Body(ValidationPipe) signInTechDto: SignInTechDto) {
     return this.techService.signIn(signInTechDto);
+  }
+
+  @Get('*')
+  getAuth() {
+    return 'auth controller'
   }
 }
