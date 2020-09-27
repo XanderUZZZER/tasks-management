@@ -5,10 +5,16 @@ import { SignUpTechDto } from './dto/signup-tech.dto';
 import { Tech } from './tech.model';
 import * as bcrypt from 'bcryptjs';
 import { SignInTechDto } from './dto/signin-tech.dto';
+import { JwtService } from '@nestjs/jwt';
+import { JwtPayload } from './jwt-payload.interface';
 
 @Injectable()
 export class AuthService {
-  constructor(@InjectModel('Tech') private readonly techModel: Model<Tech>) { }
+  constructor(
+    @InjectModel('Tech')
+    private readonly techModel: Model<Tech>,
+    private jwtService: JwtService
+  ) { }
 
   async signUp(singUpTechDto: SignUpTechDto) {
     const {
@@ -42,7 +48,7 @@ export class AuthService {
     }
   }
 
-  async signIn(singInTechDto: SignInTechDto) {
+  async signIn(singInTechDto: SignInTechDto): Promise<{ jwtToken: string }> {
     const {
       email,
       password
@@ -52,16 +58,19 @@ export class AuthService {
       const tech = await this.techModel.findOne({ email });
 
       if (!tech) {
-        return new NotFoundException('email not found');
+        throw new NotFoundException('email not found');
       }
 
       const isMatch = await bcrypt.compare(password, tech.password);
 
       if (!isMatch) {
-        return new NotFoundException('invalid pass');
+        throw new NotFoundException('invalid pass');
       }
-      console.log(tech);
-      return tech;
+
+      const payload: JwtPayload = { email, password };
+      const jwtToken = await this.jwtService.signAsync(payload);
+      console.log(jwtToken);
+      return { jwtToken };
     }
     catch (error) {
       console.log('Error during signing in...');
