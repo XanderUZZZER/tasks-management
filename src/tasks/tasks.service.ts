@@ -1,6 +1,5 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { Task, TaskStatus } from './task.model';
-import { v4 as uuidv4 } from 'uuid';
 import { CreateTaskDto } from './dto/create-task.dto';
 import { GetTaskFilterDto } from './dto/get-task-filter.dto';
 
@@ -39,20 +38,17 @@ export class TasksService {
 
   async getTaskById(id: string, tech: Tech): Promise<Task> {
 
-    console.log(id);
-    console.log(tech);
+    try {
+      const found = await this.taskModel.findOne({ _id: id, creator: tech.id });
 
-
-    const found = await this.taskModel.findOne({ id, creator: tech.id });
-
-    //const found = await this.taskModel.findOne(task => task.creator === tech.id);
-    //const found = await this.taskModel.findOne(task => (task.id === id) && (task.creator === tech.id));
-
-    if (!found) {
-      throw new NotFoundException(`Task with ID ${id} not found`);
+      if (!found) {
+        throw new NotFoundException(`Task with ID ${id} not found for such tech ${tech.id}`);
+      }
+      return found;
     }
-
-    return found;
+    catch (err) {
+      throw new NotFoundException(err);
+    }
   }
 
   async createTask(createTaskDto: CreateTaskDto, techDto: Tech): Promise<Task> {
@@ -72,14 +68,28 @@ export class TasksService {
     return result;
   }
 
-  // deleteTask(id: string): void {
-  //   const found = this.getTaskById(id);
-  //   this.tasks = this.tasks.filter(task => task.id !== found.id);
-  // }
+  async deleteTask(id: string, tech: Tech): Promise<void> {
 
-  // updateTask(id: string, status: TaskStatus): Task {
-  //   const task = this.getTaskById(id);
-  //   task.status = status;
-  //   return task;
-  // }
+    try {
+      const found = await this.getTaskById(id, tech);
+      await this.taskModel.findByIdAndDelete({ _id: found.id });
+    } catch (error) {
+      console.log(error);
+      throw new NotFoundException(error);
+    }
+  }
+
+  async updateTask(id: string, status: TaskStatus, tech: Tech): Promise<Task> {
+    const task = await this.getTaskById(id, tech);
+    task.status = status;
+    if (status === TaskStatus.IN_PROGRESS) {
+      task.tookToResolving = new Date();
+      task.resolver = tech.id;
+    } else if (status === TaskStatus.DONE) {
+      task.resolved = new Date();
+      task.resolver = tech.id;
+    }
+    await task.save();
+    return task;
+  }
 }
