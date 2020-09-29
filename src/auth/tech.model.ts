@@ -1,4 +1,5 @@
 import * as mongoose from 'mongoose';
+import { Task } from 'src/tasks/task.model';
 
 export const TechSchema = new mongoose.Schema({
   firstName: {
@@ -19,7 +20,31 @@ export const TechSchema = new mongoose.Schema({
   date: {
     type: Date,
     default: Date.now
-  }
+  },
+  createdTasks: [
+    {
+      task: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Task'
+      }
+    }
+  ],
+  inProgressTasks: [
+    {
+      task: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Task'
+      }
+    }
+  ],
+  resolvedTasks: [
+    {
+      task: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Task'
+      }
+    }
+  ],
 });
 
 export interface Tech extends mongoose.Document {
@@ -28,5 +53,8 @@ export interface Tech extends mongoose.Document {
   lastName: string,
   email: string,
   password: string,
-  date: Date
+  date: Date,
+  createdTasks?: Array<Task>,
+  inProgressTasks?: Array<Task>,
+  resolvedTasks?: Array<Task>,
 }

@@ -1,9 +1,13 @@
 import * as mongoose from 'mongoose';
 
 export const TaskSchema = new mongoose.Schema({
-  tech: {
+  creator: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'tech'
+    ref: 'Tech'
+  },
+  resolver: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Tech'
   },
   title: {
     type: String,
@@ -16,15 +20,29 @@ export const TaskSchema = new mongoose.Schema({
   status: {
     type: String,
     required: true
+  },
+  created: {
+    type: Date,
+    default: Date.now
+  },
+  tookToResolving: {
+    type: Date
+  },
+  resolved: {
+    type: Date
   }
 });
 
 export interface Task extends mongoose.Document {
   id: string,
-  tech?: string,
+  creator?: string,
+  resolver?: string,
   title: string,
   description: string,
-  status: TaskStatus
+  status: TaskStatus,
+  created?: Date,
+  tookToResolving: Date,
+  resolved?: Date
 }
 
 export enum TaskStatus {

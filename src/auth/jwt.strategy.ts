@@ -19,7 +19,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   }
 
   async validate(payload: JwtPayload): Promise<Tech> {
-    const { email, password } = payload;
+    const { email } = payload;
     const tech = await this.techModel.findOne({ email });
     console.log('jwt strategy', tech);
 

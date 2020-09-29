@@ -6,41 +6,47 @@ import { GetTaskFilterDto } from './dto/get-task-filter.dto';
 
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
+import { Tech } from '../auth/tech.model';
 
 @Injectable()
 export class TasksService {
-  private tasks: Task[] = [];
 
-  constructor(@InjectModel('Task') private readonly taskModel: Model<Task>) { }
+  tasks: Task[] = [];
 
-  async getAllTasks(): Promise<Task[]> {
-    //return this.tasks;
-    const tasks = await this.taskModel.find().exec();
+  constructor(
+    @InjectModel('Task') private readonly taskModel: Model<Task>,
+    @InjectModel('Tech') private readonly techModel: Model<Tech>
+  ) { }
+
+  async getTasks(filterDto: GetTaskFilterDto, tech: Tech): Promise<Task[]> {
+    const { status, searchTerm } = filterDto;
+
+    let tasks = await this.taskModel.find({ creator: tech.id });
+
+    if (status) {
+      tasks = tasks.filter(task => task.status === status);
+    }
+
+    if (searchTerm) {
+      tasks = tasks.filter(task =>
+        task.title.includes(searchTerm) ||
+        task.description.includes(searchTerm)
+      );
+    }
+
     return tasks;
   }
 
-  getTasksWithFilters(filterDto: GetTaskFilterDto): Task[] {
-    // const { status, searchTerm } = filterDto;
-    // let tasks = this.getAllTasks();
+  async getTaskById(id: string, tech: Tech): Promise<Task> {
 
-    // if (status) {
-    //   tasks = tasks.filter(task => task.status === status);
-    // }
+    console.log(id);
+    console.log(tech);
 
-    // if (searchTerm) {
-    //   tasks = tasks.filter(task =>
-    //     task.title.includes(searchTerm) ||
-    //     task.description.includes(searchTerm)
-    //   );
-    // }
 
-    //return tasks;
+    const found = await this.taskModel.findOne({ id, creator: tech.id });
 
-    return null;
-  }
-
-  getTaskById(id: string): Task {
-    const found = this.tasks.find(task => task.id === id);
+    //const found = await this.taskModel.findOne(task => task.creator === tech.id);
+    //const found = await this.taskModel.findOne(task => (task.id === id) && (task.creator === tech.id));
 
     if (!found) {
       throw new NotFoundException(`Task with ID ${id} not found`);
@@ -49,39 +55,31 @@ export class TasksService {
     return found;
   }
 
-  async createTask(createTaskDto: CreateTaskDto): Promise<Task> {
-    // const { title, description } = createTaskDto;
-    // const task: Task = {
-    //   id: uuidv4(),
-    //   title,
-    //   description,
-    //   status: TaskStatus.OPEN
-    // }
-
-    // this.tasks.push(task);
-    // return task;
-
+  async createTask(createTaskDto: CreateTaskDto, techDto: Tech): Promise<Task> {
     const { title, description } = createTaskDto;
-
+    const tech = await this.techModel.findById(techDto.id).select('-password');
     const task = new this.taskModel({
+      creator: tech,
       title,
       description,
       status: TaskStatus.OPEN
     });
 
+    tech.createdTasks.unshift(task);
+    await tech.save();
     const result = await task.save();
     console.log(result);
     return result;
   }
 
-  deleteTask(id: string): void {
-    const found = this.getTaskById(id);
-    this.tasks = this.tasks.filter(task => task.id !== found.id);
-  }
+  // deleteTask(id: string): void {
+  //   const found = this.getTaskById(id);
+  //   this.tasks = this.tasks.filter(task => task.id !== found.id);
+  // }
 
-  updateTask(id: string, status: TaskStatus): Task {
-    const task = this.getTaskById(id);
-    task.status = status;
-    return task;
-  }
+  // updateTask(id: string, status: TaskStatus): Task {
+  //   const task = this.getTaskById(id);
+  //   task.status = status;
+  //   return task;
+  // }
 }

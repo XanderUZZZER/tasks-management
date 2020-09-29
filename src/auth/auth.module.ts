@@ -27,7 +27,8 @@ import { TechSchema } from './tech.model';
   ],
   exports: [
     JwtStrategy,
-    PassportModule
+    PassportModule,
+    MongooseModule.forFeature([{ name: 'Tech', schema: TechSchema }])
   ]
 })
 export class AuthModule { }
